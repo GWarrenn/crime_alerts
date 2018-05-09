@@ -31,6 +31,7 @@ def crime_alerts_main(upload = True,send_message = True):
     for index,row in select_user_data.iterrows():
         user_name = row['user_name']
         user_phone_number = row['phone_number']
+        crime_user_id = row['crime_user_id']
         
         print "Processing crime data for " + user_name.strip() + " at " + str(user_phone_number).strip()
         
@@ -39,7 +40,7 @@ def crime_alerts_main(upload = True,send_message = True):
                     'geometry.y','geometry.x','date_start','attributes.OFFENSE','attributes.NEIGHBORHOOD_CLUSTER','date_reported']
         
         recent_crime = recent_crime[trim_cols]
-        select_statement = "select * from crime_alerts_incidents"
+        select_statement = "select * from crime_alerts_incidents where crime_user_id ="+str(crime_user_id)
         
         prev_week_db = pd.read_sql(select_statement, conn) 
 
@@ -61,6 +62,8 @@ def crime_alerts_main(upload = True,send_message = True):
         new_cols = prev_week_db.columns.tolist()
         new_incidents['date_uploaded'] = pd.Timestamp.today()
         new_incidents['date_uploaded'] = new_incidents['date_uploaded'].astype('string')
+        
+        new_incidents['crime_user_id'] = crime_user_id
         
         new_incidents = new_incidents[new_cols]
         
