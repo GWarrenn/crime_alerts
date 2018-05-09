@@ -9,8 +9,9 @@ from sqlalchemy import *
 import datetime
 import boto3
 import ConfigParser
+import argparse
 
-def crime_alerts_main(upload = True,send_message = True):
+def crime_alerts_main(upload,send_message):
     '''
     Main function to pull, process and send notification for DC crime data
     Currently designed to pull and process crime data for all users in crime_alerts_users table
@@ -68,7 +69,6 @@ def crime_alerts_main(upload = True,send_message = True):
         new_incidents = new_incidents[new_cols]
         
         if new_incidents.empty == False :
-            
             if upload:
                 try:
                     print "Uploading "+ str(len(new_incidents.index)) + " new crime incidents to database"
@@ -78,7 +78,7 @@ def crime_alerts_main(upload = True,send_message = True):
             if send_message:
                 print "Sending "+ str(len(new_incidents.index)) + " new crime notifications to " + user_name
                 for index,row in new_incidents.iterrows():
-                    message = "Crime Alert: "+row['crime_type']+ " at "+ row['crime_address'] + " on " + str(row['crime_date_reported'])
+                    message = "Crime Alert: "+row['crime_type']+ " at "+ row['crime_address'] + " on " + str(row['crime_date_start'])
                     send_alert(user_phone_number,message)
         else:
             print "No new crime incidents to upload"
@@ -155,11 +155,19 @@ def send_alert(phone_number,message):
         Message=message
     )
 
-def crime_alerts_cmd(upload = True,send_message = True):
+def crime_alerts_cmd():
     '''
     Place holder for docstrings
     '''
-    crime_alerts_main(upload,send_message)
+    parser = argparse.ArgumentParser(description="run crime_alerts_main")
+    parser.add_argument('--upload', '-u',action='store_true',help="Upload data to database.")
+    parser.add_argument('--send_message', '-sms',action='store_true',help="Send notifications for new crime incidents")
+
+    args=parser.parse_args()
+
+    print args.upload
+
+    crime_alerts_main(args.upload,args.send_message)
     
 #################
 
